@@ -66,7 +66,6 @@ This ensures the system can handle large-scale inputs efficiently.
 ---
 
 ## Project Structure
-## Project Structure
 
 ```text
 engine/
