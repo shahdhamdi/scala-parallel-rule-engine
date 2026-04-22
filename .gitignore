@@ -45,3 +45,8 @@ build/
 
 ### Scala ###
 .bsp/
+.idea
+project
+*.log
+
+application.conf
