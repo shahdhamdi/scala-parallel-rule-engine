@@ -99,7 +99,7 @@ engine/
 flowchart TD
     A[CSV File TRX10M.csv] --> B[Read All Lines]
     B --> C[Drop Header]
-    C --> D["Split into Chunks (batchSize)"]
+    C --> D["Split into Chunks"]
     
     D --> E[Chunk 1]
     D --> F[Chunk 2]
