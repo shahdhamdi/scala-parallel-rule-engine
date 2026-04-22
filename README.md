@@ -66,15 +66,19 @@ This ensures the system can handle large-scale inputs efficiently.
 ---
 
 ## Project Structure
+## Project Structure
+
+```text
 engine/
 │
-├── Main.scala → Pipeline orchestration and execution flow
-├── Rules.scala → Functional discount engine (core logic)
-├── DB.scala → Database batch insert operations
-├── DB_connection.scala → JDBC connection using external config
-├── AppLogger.scala → Logging configuration
-├── utils.scala → Parsing and helper utilities
-└── models/ → Domain models (Order, ProcessedOrder)
+├── Main.scala            → Pipeline orchestration and execution flow
+├── Rules.scala           → Functional discount engine (core logic)
+├── DB.scala              → Database batch insert operations
+├── DB_connection.scala   → JDBC connection using external config
+├── AppLogger.scala       → Logging configuration
+├── utils.scala           → Parsing and helper utilities
+└── models                → Domain models (Order, ProcessedOrder)
+```
 
 
 ---
