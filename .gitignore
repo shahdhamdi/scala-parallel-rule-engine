@@ -50,3 +50,4 @@ project
 *.log
 
 application.conf
+build.sbt
