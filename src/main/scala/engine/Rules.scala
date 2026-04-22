@@ -86,8 +86,8 @@ object Rules {
     safe {
       val channel = order.channel.toLowerCase
       if (AppSalesQualifier(channel)) {
-        val rounded = ((order.quantity + 4) / 5) * 5
-        (rounded / 5) * 0.05
+        val discount = ((order.quantity + 4) / 5) * 5
+        (discount / 5) * 0.05
       } else 0.0
     }.getOrElse(0.0)
 
