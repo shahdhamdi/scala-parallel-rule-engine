@@ -99,23 +99,22 @@ engine/
 flowchart TD
     A[CSV File TRX10M.csv] --> B[Read All Lines]
     B --> C[Drop Header]
-    C --> D[Split into Chunks بحجم batchSize]
-
+    C --> D["Split into Chunks (batchSize)"]
+    
     D --> E[Chunk 1]
     D --> F[Chunk 2]
     D --> G[Chunk 3]
     D --> H[Chunk ...]
-
+    
     E --> I[Parallel Processing]
     F --> I
     G --> I
     H --> I
-
+    
     I --> J[Save Each Chunk to DB]
-    J --> K[Commit / Rollback]
-    K --> L[Next Chunk]
-    L --> M[All Chunks Done]
-    M --> N[Log Total Time]
+    J --> K[Commit/Rollback]
+    K --> L[All Chunks Done]
+    L --> M[Log Total Time]
 ```
 ---
 
