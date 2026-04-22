@@ -1,4 +1,5 @@
 package engine
+
 import AppLogger.logger
 import java.time.LocalDateTime
 import scala.io.Source
@@ -12,81 +13,86 @@ object Main extends App {
   val batchSize = 500000
   val forkJoinPool = new java.util.concurrent.ForkJoinPool(4)
 
-
-  logger.info("Pipeline started ")
+  logger.info("Pipeline started")
 
   try {
-    logger.info("Phase 1: Loading file started ")
 
-    val conn = DB_connection.getConnection()
-    conn.setAutoCommit(false)
+    DB_connection.getConnection() match {
 
-    try {
+      case Right(conn) =>
 
-      Using.resource(Source.fromFile("src/main/resources/TRX10M.csv")) { source =>
+        // disable auto commit for batch control
+        conn.setAutoCommit(false)
 
-        logger.info("File loaded successfully")
+        try {
 
-        logger.info("Phase 2: Processing batches started ")
+          Using.resource(Source.fromFile("src/main/resources/TRX10M.csv")) { source =>
 
-        source.getLines()
-          .drop(1)
-          .grouped(batchSize)
-          .zipWithIndex
-          .foreach { case (batch, index) =>
+            logger.info("Processing started")
 
-            logger.info(s"Processing batch ${index + 1}")
+            source.getLines()
+              .drop(1) // skip header
+              .grouped(batchSize)
+              .zipWithIndex
+              .foreach { case (batch, index) =>
 
-            val parBatch = batch.par
-            parBatch.tasksupport = new ForkJoinTaskSupport(forkJoinPool)
+                logger.info(s"Processing batch ${index + 1}")
 
-            val processedBatch = parBatch.map { line =>
-              val order = utils.parseLine(line)
+                // parallel processing
+                val parBatch = batch.par
+                parBatch.tasksupport = new ForkJoinTaskSupport(forkJoinPool)
 
-              val discount = Rules.CalculateDiscount(order)
-              val total = order.unitPrice * order.quantity
-              val finalPrice = total * (1 - discount)
+                val processedBatch = parBatch.map { line =>
 
-              ProcessedOrder(
-                transactionDate = order.transactionDate,
-                quantity = order.quantity,
-                productName = order.productName,
-                discount = discount,
-                unitPrice = order.unitPrice,
-                finalPrice = finalPrice,
-                processedAt = LocalDateTime.now()
-              )
-            }.toList
+                  val order = utils.parseLine(line)
 
-            logger.info(s"Batch ${index + 1} processed  (${processedBatch.size} records)")
+                  val discount = Rules.CalculateDiscount(order)
+                  val total = order.unitPrice * order.quantity
+                  val finalPrice = total * (1 - discount)
 
-            logger.info(s"Saving batch ${index + 1} to DB ")
+                  ProcessedOrder(
+                    order.transactionDate,
+                    order.quantity,
+                    order.productName,
+                    discount,
+                    order.unitPrice,
+                    finalPrice,
+                    LocalDateTime.now()
+                  )
+                }.toList
 
-            DB.saveBatch(conn, processedBatch) match {
-              case Right(_) =>
-                conn.commit()
-                logger.info(s"Batch ${index + 1} saved successfully ✔")
+                logger.info(s"Batch ${index + 1} processed (${processedBatch.size})")
 
-              case Left(err) =>
-                conn.rollback()
-                logger.severe(s"Batch ${index + 1} failed : $err")
-            }
+                // save batch
+                DB.saveBatch(conn, processedBatch) match {
+                  case Right(_) =>
+                    conn.commit()
+                    logger.info(s"Batch ${index + 1} saved")
+
+                  case Left(err) =>
+                    conn.rollback()
+                    logger.severe(s"Batch ${index + 1} failed: $err")
+                }
+              }
           }
-      }
 
-    } finally {
-      conn.close()
-      logger.info("DB connection closed ")
+        } finally {
+          conn.close()
+          logger.info("DB connection closed")
+        }
+
+      case Left(err) =>
+        logger.severe(s"DB connection failed: $err")
     }
 
   } catch {
     case e: Exception =>
-      logger.severe(s"Fatal pipeline error : ${e.getMessage}")
+      logger.severe(s"Pipeline error: ${e.getMessage}")
   }
 
   val endTime = System.nanoTime()
   val durationSeconds = (endTime - startTime) / 1e9
 
-  logger.info("Pipeline finished ")
-  logger.info(f"Total processing time: $durationSeconds%.2f seconds")
+  logger.info("Pipeline finished")
+  logger.info(f"Total time: $durationSeconds%.2f sec")
 }

@@ -2,17 +2,22 @@ package engine
 
 import java.sql.{Connection, DriverManager}
 import com.typesafe.config.ConfigFactory
+import scala.util.Try
 
 object DB_connection {
-// load config file to connect to db
-   val config = ConfigFactory.load()
 
-   val url = config.getString("db.url")
-   val user = config.getString("db.user")
-   val password = config.getString("db.password")
+  // Load configuration once
+  private val config = ConfigFactory.load()
 
-  def getConnection(): Connection = {
-     Class.forName("com.mysql.cj.jdbc.Driver")
-     DriverManager.getConnection(url, user, password)
+  private val url      = config.getString("db.url")
+  private val user     = config.getString("db.user")
+  private val password = config.getString("db.password")
+
+  // Safe connection creation
+  def getConnection(): Either[String, Connection] = {
+    Try {
+      Class.forName("com.mysql.cj.jdbc.Driver")
+      DriverManager.getConnection(url, user, password)
+    }.toEither.left.map(_.getMessage)
   }
 }

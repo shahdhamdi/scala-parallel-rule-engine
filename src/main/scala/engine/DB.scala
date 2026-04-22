@@ -14,7 +14,7 @@ object DB {
         """
 
       val stmt = conn.prepareStatement(sql)
-
+      // insert data as batches in the database
       orders.foreach { po =>
         stmt.setDate(1, java.sql.Date.valueOf(po.transactionDate))
         stmt.setInt(2, po.quantity)

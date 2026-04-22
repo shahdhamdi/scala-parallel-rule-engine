@@ -1,7 +1,7 @@
 package engine
 import java.time.{LocalDate, LocalDateTime}
 
-// case class for the 2 types of data I will deal with
+// Data models used across the pipeline: raw input (Order) and computed output (ProcessedOrder)
 case class Order(
                   transactionDate: LocalDate,
                   productName: String,
